@@ -1,5 +1,5 @@
-var LemonadeStand = artifacts.require("LemonadeStand");
+var LemonadeSale = artifacts.require("LemonadeSale");
 
 module.exports = function(deployer) {
-    deployer.deploy(LemonadeStand);
+    deployer.deploy(LemonadeSale);
 };

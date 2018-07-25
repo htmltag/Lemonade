@@ -2,9 +2,9 @@ pragma solidity ^0.4.24;
 
 import "../node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "./LemonadeOwnership.sol";
+import "./LemonadeFactory.sol";
 
-contract LemonadeSale is LemonadeOwnership {
+contract LemonadeSale is LemonadeFactory {
 
     mapping (uint256 => Sale) lemonadeIdToSale;
 
@@ -34,11 +34,13 @@ contract LemonadeSale is LemonadeOwnership {
         emit SaleCancelled(_lemonadeId);
     }
 
+    //clean up - remove the sale
     function _removeSale(uint256 _lemonadeId) internal {
         delete lemonadeIdToSale[_lemonadeId];
     }
 
-    function _buy(uint256 _lemonadeId) public payable {
+    //
+    function buy(uint256 _lemonadeId) public payable {
         Sale storage sale = lemonadeIdToSale[_lemonadeId];
         require(msg.value >= sale.price);
 
@@ -51,6 +53,8 @@ contract LemonadeSale is LemonadeOwnership {
         lemonadeToOwner[_lemonadeId] = msg.sender;
         ownerLemonadeCount[seller] = ownerLemonadeCount[seller].sub(1);
         ownerLemonadeCount[msg.sender] = ownerLemonadeCount[msg.sender].add(1); 
+
+        emit SaleSuccessful(_lemonadeId, price, msg.sender);
     }  
 
 }

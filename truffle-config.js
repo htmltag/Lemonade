@@ -12,13 +12,21 @@
  *   },
  */
 
+var localaddr = "0x6cb7b6463db108e661c99fbd5d329a45401a4d79";
+
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!
   networks: {
     development: {
       host: "127.0.0.1",
-      port: 7545,
+      port: 8545,
+      network_id: "*" // Match any network id
+    },
+    local: {
+      host: "127.0.0.1",
+      port: 8545,
+      from: localaddr, //for local geth network
       network_id: "*" // Match any network id
     }
   }

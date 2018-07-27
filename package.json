@@ -1,5 +1,5 @@
 {
-  "name": "solitity-test",
+  "name": "lemonade",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
@@ -12,7 +12,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "openzeppelin-solidity": "1.11.0"
-  }
+  "dependencies": {}
 }

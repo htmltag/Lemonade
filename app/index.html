@@ -1,129 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8">
-    <title>CryptoZombies front-end</title>
+    <title>Lemonade front-end</title>
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+
     <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script language="javascript" type="text/javascript" src="web3.min.js"></script>
-    <script language="javascript" type="text/javascript" src="lemonade_abi.js"></script>
-  </head>
-  <body>
-    <div id="txStatus"></div>
-    <div id="zombies"></div>
+    <script language="javascript" type="text/javascript" src="./script/web3.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ethjs@0.3.4/dist/ethjs.min.js"></script>
+    <script language="javascript" type="text/javascript" src="./abi/lemonade_abi.js"></script>
+</head>
 
+<body>
+    <div id="balance"></div>
+    <div id="mylemonades"></div>
+
+
+    <!--Script to interact with smartcontract-->
     <script>
-      var cryptoZombies;
-      var userAccount;
-
-      function startApp() {
-        var cryptoZombiesAddress = "YOUR_CONTRACT_ADDRESS";
-        cryptoZombies = new web3js.eth.Contract(cryptoZombiesABI, cryptoZombiesAddress);
-
-        var accountInterval = setInterval(function() {
-          // Check if account has changed
-          if (web3.eth.accounts[0] !== userAccount) {
-            userAccount = web3.eth.accounts[0];
-            // Call a function to update the UI with the new account
-            getZombiesByOwner(userAccount)
-            .then(displayZombies);
-          }
-        }, 100);
-
-        // Start here
-      }
-
-      function displayZombies(ids) {
-        $("#zombies").empty();
-        for (id of ids) {
-          // Look up zombie details from our contract. Returns a `zombie` object
-          getZombieDetails(id)
-          .then(function(zombie) {
-            // Using ES6's "template literals" to inject variables into the HTML.
-            // Append each one to our #zombies div
-            $("#zombies").append(`<div class="zombie">
-              <ul>
-                <li>Name: ${zombie.name}</li>
-                <li>DNA: ${zombie.dna}</li>
-                <li>Level: ${zombie.level}</li>
-                <li>Wins: ${zombie.winCount}</li>
-                <li>Losses: ${zombie.lossCount}</li>
-                <li>Ready Time: ${zombie.readyTime}</li>
-              </ul>
-            </div>`);
-          });
-        }
-      }
-
-      function createRandomZombie(name) {
-        // This is going to take a while, so update the UI to let the user know
-        // the transaction has been sent
-        $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
-        // Send the tx to our contract:
-        return cryptoZombies.methods.createRandomZombie(name)
-        .send({ from: userAccount })
-        .on("receipt", function(receipt) {
-          $("#txStatus").text("Successfully created " + name + "!");
-          // Transaction was accepted into the blockchain, let's redraw the UI
-          getZombiesByOwner(userAccount).then(displayZombies);
+        window.addEventListener('load', function () {
+            // Check if Web3 has been injected by the browser:
+            if (typeof web3 !== 'undefined') {
+                // You have a web3 browser! Continue below!
+                startApp(web3);
+                //alert("Web3");
+            } else {
+                //alert("No hay web3");
+                // Warn the user that they need to get a web3 browser
+                // Or install MetaMask, maybe with a nice graphic.
+            }
         })
-        .on("error", function(error) {
-          // Do something to alert the user their transaction has failed
-          $("#txStatus").text(error);
-        });
-      }
-
-      function feedOnKitty(zombieId, kittyId) {
-        $("#txStatus").text("Eating a kitty. This may take a while...");
-        return cryptoZombies.methods.feedOnKitty(zombieId, kittyId)
-        .send({ from: userAccount })
-        .on("receipt", function(receipt) {
-          $("#txStatus").text("Ate a kitty and spawned a new Zombie!");
-          getZombiesByOwner(userAccount).then(displayZombies);
-        })
-        .on("error", function(error) {
-          $("#txStatus").text(error);
-        });
-      }
-
-      function levelUp(zombieId) {
-        $("#txStatus").text("Leveling up your zombie...");
-        return cryptoZombies.methods.levelUp(zombieId)
-        .send({ from: userAccount, value: web3.utils.toWei("0.001", "ether") })
-        .on("receipt", function(receipt) {
-          $("#txStatus").text("Power overwhelming! Zombie successfully leveled up");
-        })
-        .on("error", function(error) {
-          $("#txStatus").text(error);
-        });
-      }
-
-      function getZombieDetails(id) {
-        return cryptoZombies.methods.zombies(id).call()
-      }
-
-      function zombieToOwner(id) {
-        return cryptoZombies.methods.zombieToOwner(id).call()
-      }
-
-      function getZombiesByOwner(owner) {
-        return cryptoZombies.methods.getZombiesByOwner(owner).call()
-      }
-
-      window.addEventListener('load', function() {
-
-        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
-        if (typeof web3 !== 'undefined') {
-          // Use Mist/MetaMask's provider
-          web3js = new Web3(web3.currentProvider);
-        } else {
-          // Handle the case where the user doesn't have Metamask installed
-          // Probably show them a message prompting them to install Metamask
+        const abi = lemonadeABI;
+        const contract_address = '0x44747b9caa0b57799c9cac15b46be3da6a1df9de'
+        var userAccount = 'userAccount';
+        var refAccount = 'refAccount';
+        var _gas = 50;
+        
+        function startApp(web3) {
+            //alert("entro");
+            const eth = new Eth(web3.currentProvider);
+            const token = eth.contract(abi).at(contract_address);
+            listenForClicks(token, web3);
         }
 
-        // Now you can start your app & access web3 freely:
-        startApp()
+        function listenForClicks(lemonadeStand, web3) {
+            var button = document.querySelector('button.transferFunds');
 
-      })
+            var accountInterval = setInterval(function () {
+                web3.eth.getAccounts(function (err, accounts) { userAccount = accounts[0]; });
+                if (refAccount !== userAccount) {
+                    console.log("na: " + nAccount);
+                    console.log("ua: " + userAccount);
+                    if (userAccount.length > 12) { getLemonadesByOwner(userAccount) };
+                    //.then(displayMyLemonades);
+                }
+            }, 300);
+
+            function displayMyLemonades(ids) {
+                $("#mylemonades").empty();
+                for (id of ids) {
+                    // Look up lemonade details from our contract. Returns a `lemonade` object
+                    lemonadeStand.lemonades(id)
+                        .then(function (lemonade) {
+                            $("#mylemonades").append(`<div class="lemonade">
+                            <ul>
+                                <li>Name: ${lemonade.name}</li>
+                                <li>Ingredients: ${lemonade.ingredients}</li>
+                                <li>onsumed: ${lemonade.consumed}</li>
+                            </ul>
+                            </div>`);
+                        });
+                }
+            }
+
+            function getLemonadeDetails(id) {
+                lemonadeStand.lemonades(id).then(function (id) {
+                    return id;
+                });
+            }
+
+            function lemonadeToOwner(id) {
+                return lemonadeStand.lemonadeToOwner(id);
+            }
+
+            function getNumberOfLemonades() {
+                lemonadeStand.size().then(function (count) {
+                    return count[0];
+                });
+            }
+
+            function getLemonadesByOwner(owner) {
+                lemonadeStand.getLemonadesByOwner(owner).then(function (ids) {
+                    refAccount = userAccount; //Make sure they are the same
+                    getbalanceOfLemonadeCoins(owner);
+                    displayMyLemonades(ids[0]);
+                });
+            }
+
+            function getbalanceOfLemonadeCoins(owner) {
+                lemonadeStand.balanceOf(owner).then(function(balance){
+                    $("#balance").empty();
+                    $("#balance").text("LemonadeCoin(LMC) balance: " + balance[0]);
+                });
+            }
+        }//listenForClicks
+
+        //When you send ether to performe some actions, wait for it to be mined. Success/Fail
+        async function waitForTxToBeMined(txHash) {
+            let txReceipt
+            while (!txReceipt) {
+                try {
+                    txReceipt = await eth.getTransactionReceipt(txHash)
+                } catch (err) {
+                    return indicateFailure(err)
+                }
+            }
+            indicateSuccess()
+        }
     </script>
-  </body>
+</body>
+
 </html>

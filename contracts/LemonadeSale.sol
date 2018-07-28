@@ -15,13 +15,15 @@ contract LemonadeSale is LemonadeFactory {
     struct Sale {
         address seller;
         uint256 price;
+        bool exists;
     }
 
     //Set lemonade for sale
     function createSale(uint256 _lemonadeId, uint256 _price) public payable onlyOwnerOf(_lemonadeId) {
         Sale memory sale = Sale({
             seller: msg.sender,
-            price: _price
+            price: _price,
+            exists: true
         });
         lemonadeIdToSale[_lemonadeId] = sale;
         emit SaleCreated(_lemonadeId, _price);
@@ -55,6 +57,13 @@ contract LemonadeSale is LemonadeFactory {
         ownerLemonadeCount[msg.sender] = ownerLemonadeCount[msg.sender].add(1); 
 
         emit SaleSuccessful(_lemonadeId, price, msg.sender);
+    }
+
+    function forSale(uint256 _lemonadeId) external view returns(bool) {
+        if(lemonadeIdToSale[_lemonadeId].exists == true){
+            return true;
+        }
+        return false;
     }  
 
 }

@@ -69,6 +69,10 @@ contract LemonadeFactory is ERC721Token("LemonadeCoin", "LMC"), Ownable {
         return result;
     }
 
+    function size() external view returns (uint256) {
+        return lemonades.length;
+    }   
+
     /**
     * Public
     */

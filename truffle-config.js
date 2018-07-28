@@ -12,7 +12,10 @@
  *   },
  */
 
-var localaddr = "0x6cb7b6463db108e661c99fbd5d329a45401a4d79";
+var HDWalletProvider = require("truffle-hdwallet-provider");
+var mnemonic = "...";
+
+var localaddr = "0x6cb7b6463db108e661c99fbd5d329a45401a4d79"; //for local geth network
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -28,6 +31,13 @@ module.exports = {
       port: 8545,
       from: localaddr, //for local geth network
       network_id: "*" // Match any network id
-    }
+    },
+    ropsten: {
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/<someID>")
+      },
+      network_id: 3,
+      gas: 4612388
+    } 
   }
 };

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
     <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
     <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+    <link rel="stylesheet" href="./styles/style.css">
 
     <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script language="javascript" type="text/javascript" src="./script/web3.min.js"></script>
@@ -14,9 +15,57 @@
     <script language="javascript" type="text/javascript" src="./abi/lemonade_abi.js"></script>
 </head>
 
-<body>
-    <div id="balance"></div>
-    <div id="mylemonades"></div>
+<body class="container" style="padding-top: 3%;">
+    <div id="balance" class="row"></div>
+    <div id="create" class="row create">
+        <ul>
+            <li>
+                Water:
+                <select>
+                    <option value="0">Tap water</option>
+                    <option value="1">Arctic water</option>
+                </select>
+            </li>
+            <li>
+                Sugar amount:
+                <select>
+                    <option value="0">1/10</option>
+                    <option value="1">2/10</option>
+                    <option value="2">3/10</option>
+                    <option value="3">4/10</option>
+                    <option value="4">5/10</option>
+                    <option value="5">6/10</option>
+                    <option value="6">7/10</option>
+                    <option value="7">8/10</option>
+                    <option value="8">9/10</option>
+                    <option value="9">10/10</option>
+                </select>
+            </li>
+            <li>
+                Lemonade:
+                <select>
+                    <option value="0">Norwegian lemons</option>
+                    <option value="1">Russian lemons</option>
+                    <option value="2">Swiss lemons</option>
+                    <option value="3">Chinese lemons</option>
+                    <option value="4">Brazilian green lemons</option>
+                    <option value="5">Mexican lemons</option>
+                    <option value="6">California lemons</option>
+                    <option value="7">Korean lemons</option>
+                    <option value="8">Greek lemons</option>
+                    <option value="9">Sicilian lemons</option>
+                </select>
+                <br/>
+            </li>
+            <li>
+                <button id="createlemonade" class="button button-green button-small">Create Lemonade</button>
+            </li>
+        </ul>
+    </div>
+    <div id="mylemonades-title" class="row"></div>
+    <div id="mylemonades" class="row"></div>
+    <div id="alllemonades-title" class="row"></div>
+    <div id="alllemonades" class="row"></div>
 
 
     <!--Script to interact with smartcontract-->
@@ -33,12 +82,14 @@
                 // Or install MetaMask, maybe with a nice graphic.
             }
         })
+
         const abi = lemonadeABI;
         const contract_address = '0x44747b9caa0b57799c9cac15b46be3da6a1df9de'
         var userAccount = 'userAccount';
         var refAccount = 'refAccount';
-        var _gas = 50;
-        
+        var _gas = 30000;
+
+
         function startApp(web3) {
             //alert("entro");
             const eth = new Eth(web3.currentProvider);
@@ -47,32 +98,70 @@
         }
 
         function listenForClicks(lemonadeStand, web3) {
+
             var button = document.querySelector('button.transferFunds');
 
             var accountInterval = setInterval(function () {
                 web3.eth.getAccounts(function (err, accounts) { userAccount = accounts[0]; });
                 if (refAccount !== userAccount) {
-                    console.log("na: " + nAccount);
-                    console.log("ua: " + userAccount);
-                    if (userAccount.length > 12) { getLemonadesByOwner(userAccount) };
-                    //.then(displayMyLemonades);
+                    if (userAccount != undefined && userAccount.length > 12) {
+                        getNumberOfLemonades();
+                        getLemonadesByOwner(userAccount);
+                    }
                 }
             }, 300);
 
             function displayMyLemonades(ids) {
                 $("#mylemonades").empty();
+                $("#mylemonades-title").append(`<p class="title column">My Lemonades</p><br/>`);
+                var counter = 0;
                 for (id of ids) {
                     // Look up lemonade details from our contract. Returns a `lemonade` object
                     lemonadeStand.lemonades(id)
                         .then(function (lemonade) {
-                            $("#mylemonades").append(`<div class="lemonade">
-                            <ul>
-                                <li>Name: ${lemonade.name}</li>
-                                <li>Ingredients: ${lemonade.ingredients}</li>
-                                <li>onsumed: ${lemonade.consumed}</li>
+                            $("#mylemonades").append(`<div class="lemonade column column-20">
+                            <span class="lemonade-pic">
+                                <svg height="50" width="100%">
+                                    <circle cx="50" cy="50" r="40" stroke="black" stroke-width="1" fill="${getLemonColor(lemonade.ingredients)}" />
+                                </svg>
+                            </span>
+                            <ul class="lemonade-details">
+                                <li><b>${lemonade.name}</b></li>
+                                <li><b>Ingredients:</b><br/>` + splitIngredients(lemonade.ingredients) + `</li>
+                                <li><b>Consumed:</b> ${lemonade.consumed ? "Yes" : "No"}</li>
                             </ul>
+                            <button data-typ="consume" data-id="${counter}" class="button button-green button-small">Drink it</button>
+                            <button class="button button-green button-small">Put it for sale</button>
+                            </div>`);
+                            counter++;
+                        });
+
+                }
+            }
+
+            function displayAllLemonades(ids) {
+                $("#alllemonades").empty();
+                $("#alllemonades-title").append(`<p class="title column">All Lemonades</p><br/>`);
+                var counter = 0;
+                for (var id = 0; id < ids; id++) {
+                    // Look up lemonade details from our contract. Returns a `lemonade` object
+                    lemonadeStand.lemonades(id)
+                        .then(function (lemonade) {
+                            $("#alllemonades").append(`<div class="lemonade column column-20">
+                            <span class="lemonade-pic">
+                                <svg height="50" width="100%">
+                                    <circle cx="50" cy="50" r="40" stroke="black" stroke-width="1" fill="${getLemonColor(lemonade.ingredients)}" />
+                                </svg>
+                            </span>
+                            <ul class="lemonade-details">
+                                <li><b>${lemonade.name}</b></li>
+                                <li><b>Ingredients:</b><br/>` + splitIngredients(lemonade.ingredients) + `</li>
+                                <li><b>Consumed:</b> ${lemonade.consumed ? "Yes" : "No"}</li>
+                            </ul>
+                            ${lemonade.consumed ? "Can't buy this one " : "<button class='button button-green button-small'>Buy</button>"}
                             </div>`);
                         });
+
                 }
             }
 
@@ -88,7 +177,7 @@
 
             function getNumberOfLemonades() {
                 lemonadeStand.size().then(function (count) {
-                    return count[0];
+                    displayAllLemonades(count[0]);
                 });
             }
 
@@ -101,25 +190,173 @@
             }
 
             function getbalanceOfLemonadeCoins(owner) {
-                lemonadeStand.balanceOf(owner).then(function(balance){
+                lemonadeStand.balanceOf(owner).then(function (balance) {
                     $("#balance").empty();
-                    $("#balance").text("LemonadeCoin(LMC) balance: " + balance[0]);
+                    $("#balance").append(`<div class="balance column column-40"> 
+                        LemonadeCoin balance: ${balance[0]} LMC
+                    </div>`);
                 });
             }
-        }//listenForClicks
 
-        //When you send ether to performe some actions, wait for it to be mined. Success/Fail
-        async function waitForTxToBeMined(txHash) {
-            let txReceipt
-            while (!txReceipt) {
-                try {
-                    txReceipt = await eth.getTransactionReceipt(txHash)
-                } catch (err) {
-                    return indicateFailure(err)
+            $(document).on('click', 'button', function () {
+                if ($(this).data('typ') === "consume") {
+                    var lemonadeId = $(this).data('id');
+                    lemonadeStand.consumeLemonade(lemonadeId, userAccount, { from: userAccount, gas: _gas })
+                        .then(function (txHash) {
+                            console.log('Transaction sent')
+                            console.dir(txHash)
+                            //waitForTxToBeMined(txHash)
+                        })
+                        .catch(console.error)
+                }
+            });
+
+            $(document).on('click', '#createlemonade', function () {
+                lemonadeStand.createLemonade("Frozen Lemonade", 150, { from: userAccount, gas: _gas })
+                    .then(function (txHash) {
+                        console.log('Transaction sent')
+                        console.dir(txHash)
+                        //waitForTxToBeMined(txHash)
+                    })
+                    .catch(console.error)
+            });
+
+            //split the ingredients number and find the ingredients
+            function splitIngredients(ingredients) {
+                var number = ingredients;
+                var cast = number.toString(10).split('');
+                if (cast.length > 0 && cast !== undefined) {
+                    if (cast.length === 1) {
+                        return "Water: " + getWaterQuality(0) + "<br/>Sugar: " + getSugarQuality(0) + "<br/>Lemon: " + getLemonQuality(cast[0]);
+                    } else if (cast.length === 2) {
+                        return "Water: " + getWaterQuality(0) + "<br/>Sugar: " + getSugarQuality(cast[0]) + "<br/>Lemon: " + getLemonQuality(cast[1]);
+                    } else if (cast.length === 3) {
+                        return "Water: " + getWaterQuality(cast[0]) + "<br/>Sugar: " + getSugarQuality(cast[1]) + "<br/>Lemon: " + getLemonQuality(cast[2]);
+                    }
                 }
             }
-            indicateSuccess()
-        }
+
+            function getWaterQuality(water) {
+                if (water === 0) {
+                    return "Tap water";
+                } else {
+                    return "Arctic water";
+                }
+            }
+
+            function getSugarQuality(sugar) {
+                return sugar + "/10";
+            }
+
+            function getLemonQuality(lemon) {
+                switch (lemon) {
+                    case "0":
+                        return "Norwegian lemons";
+                        break;
+                    case "1":
+                        return "Russian lemons";
+                        break;
+                    case "2":
+                        return "Swiss lemons";
+                        break;
+                    case "3":
+                        return "Chinese lemons";
+                        break;
+                    case "4":
+                        return "Brazilian green lemons";
+                        break;
+                    case "5":
+                        return "Mexican lemons";
+                        break;
+                    case "6":
+                        return "California lemons";
+                        break;
+                    case "7":
+                        return "Korean lemons";
+                        break;
+                    case "8":
+                        return "Greek lemons";
+                        break;
+                    case "9":
+                        return "Sicilian lemons";
+                        break;
+                    default:
+                        return "Unknown";
+                }
+            }
+
+            function getLemonColor(lemon) {
+                var number = lemon;
+                var cast = number.toString(10).split('');
+                if (cast.length > 0 && cast !== undefined) {
+                    if (cast.length === 1) {
+                        lemon = cast[0];
+                    } else if (cast.length === 2) {
+                        lemon = cast[1];
+                    } else if (cast.length === 3) {
+                        lemon = cast[2];
+                    }
+                }
+
+                switch (lemon) {
+                    case "0":
+                        return "#4070FF";
+                        break;
+                    case "1":
+                        return "#FCFFCD";
+                        break;
+                    case "2":
+                        return "#F1FFB8";
+                        break;
+                    case "3":
+                        return "#FFFAAE";
+                        break;
+                    case "4":
+                        return "#4AFF49";
+                        break;
+                    case "5":
+                        return "#FFFD7C";
+                        break;
+                    case "6":
+                        return "#F6FF68";
+                        break;
+                    case "7":
+                        return "#FFF55C";
+                        break;
+                    case "8":
+                        return "#FFED3D";
+                        break;
+                    case "9":
+                        return "#FFF82A";
+                        break;
+                    default:
+                        return "Unknown";
+                }
+
+            }
+
+
+
+        }//listenForClicks
+
+            //When you send ether to performe some actions, wait for it to be mined. Success/Fail
+            /*
+            async function waitForTxToBeMined(txHash) {
+                let txReceipt
+                while (!txReceipt) {
+                    try {
+                        txReceipt = await eth.getTransactionReceipt(txHash)
+                    } catch (err) {
+                        console.log(err);
+                        //return indicateFailure(err)
+                    }
+                }
+                console.log("Success");
+                //indicateSuccess()
+            }
+            
+           */
+
     </script>
 </body>
 

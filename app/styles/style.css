@@ -1,0 +1,74 @@
+body{
+    background-color: #78B991;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.title{
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #ffffff;
+    margin-top: 2rem; 
+}
+
+.create{
+    border: solid 1px #dedede;
+    background-color: #ffffff;
+    width:40%;
+}
+
+/*Balance*/
+.balance {
+    border: solid 1px #dedede;
+    background-color: #ffffff;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/*Lemonade*/
+.lemonade {
+    border: solid 1px #dedede;
+    border-bottom: solid 3px #dedede;
+    border-radius: 0.3rem;
+    margin: 0.8rem;
+    background-color: #ffffff;
+    padding: 0 !important;
+}
+
+.lemonade-pic {
+    background: #F1C954;
+    min-height: 50px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.lemonade-details {
+    padding: 0.5rem;
+}
+
+/*Buttons*/
+
+/* Extending The Inheritances */
+
+/* Custom color */
+.button-green {
+    background-color: green;
+    border-color: green;
+  }
+  
+  /* Custom size */
+  .button-small {
+    font-size: .8rem;
+    height: 2.8rem;
+    line-height: 2.8rem;
+    padding: 0 1.5rem;
+  }
+  
+  .button-large {
+    font-size: 1.4rem;
+    height: 4.5rem;
+    line-height: 4.5rem;
+    padding: 0 2rem;
+  }
